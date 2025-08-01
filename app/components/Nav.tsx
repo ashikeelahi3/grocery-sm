@@ -12,8 +12,12 @@ export default function Nav() {
       <div>
         <SignedOut>
           <div className="space-x-4">
-            <SignInButton>Sign In</SignInButton>
-            <SignUpButton>Sign Up</SignUpButton>
+            <SignInButton>
+              <span className="cursor-pointer">Sign In</span>
+            </SignInButton>
+            <SignUpButton>
+              <span className="cursor-pointer">Sign Up</span>
+            </SignUpButton>
           </div>
         </SignedOut>
         <SignedIn>
