@@ -22,6 +22,7 @@ type CartStore = {
   addToCart: (product: Product, isLoggedIn: boolean) => Promise<void>;
   removeFromCart: (_id: string) => void;
   clearCart: (isLoggedIn: boolean) => Promise<void>;
+  updateCartItemQuantity: (_id: string, quantity: number, isLoggedIn: boolean) => Promise<void>;
   initializeCartFromLocalStorage: () => void;
 };
 
@@ -113,6 +114,24 @@ export const useCartStore = create<CartStore>((set, get) => ({
       sessionStorage.removeItem("guest-cart");
     }
   },
+  updateCartItemQuantity: async (_id, quantity, isLoggedIn) => {
+    const updated = get().items.map(item =>
+      item._id === _id ? { ...item, quantityInCart: quantity } : item
+    );
+
+    set({ items: updated });
+
+    if (isLoggedIn) {
+      await fetch("/api/cart", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items: updated }),
+      });
+    } else {
+      sessionStorage.setItem("guest-cart", JSON.stringify(updated));
+    }
+  },
+
 
   initializeCartFromLocalStorage: () => {
     if (typeof window !== 'undefined') {

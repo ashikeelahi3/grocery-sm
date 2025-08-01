@@ -1,5 +1,10 @@
 import { useCartStore } from '@/lib/store';
 import { useUser } from '@clerk/nextjs';  // <-- import useUser hook
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner'
+
+
+
 
 type ProductProps = {
   name: string;
@@ -17,7 +22,8 @@ type CartProduct = ProductProps & {
 export default function ProductCard({ name, price, image, description, _id }: ProductProps) {
   const addToCart = useCartStore((state) => state.addToCart);
   const { isSignedIn = false } = useUser();  // <-- get sign-in status
-
+  const router = useRouter();
+  
   const handleAddToCart = () => {
     const product: CartProduct = {
       _id,
@@ -31,6 +37,13 @@ export default function ProductCard({ name, price, image, description, _id }: Pr
 
     // Pass isSignedIn boolean to the store function!
     addToCart(product, isSignedIn);
+    toast('Item added to cart', {
+      description: 'You can check your cart now!',
+      action: {
+        label: 'View Cart',
+        onClick: () => router.push('/cart'), // optional
+      },
+    });
   };
 
   return (

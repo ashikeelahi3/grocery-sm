@@ -2,9 +2,16 @@
 
 import { useCartStore } from '@/lib/store';
 import Link from 'next/link';
+import { useUser } from '@clerk/nextjs';
 
 export default function CartPage() {
-  const { items, removeFromCart, clearCart } = useCartStore();
+  const { isSignedIn } = useUser();
+  const {
+    items,
+    removeFromCart,
+    clearCart,
+    updateCartItemQuantity,
+  } = useCartStore();
 
   const total = items.reduce(
     (sum, item) => sum + item.price * item.quantityInCart,
@@ -35,6 +42,50 @@ export default function CartPage() {
                   <p className="text-sm text-gray-500">
                     {item.quantityInCart} × {item.price}৳
                   </p>
+
+                  {/* Quantity Editor */}
+                  <div className="flex items-center gap-2 mt-2">
+                    <button
+                      onClick={() =>
+                        updateCartItemQuantity(
+                          item._id,
+                          Math.max(1, item.quantityInCart - 1),
+                          !!isSignedIn
+                        )
+                      }
+                      className="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded"
+                    >
+                      -
+                    </button>
+
+                    <input
+                      aria-label="Quantity"
+                      type="number"
+                      min={1}
+                      value={item.quantityInCart}
+                      onChange={(e) =>
+                        updateCartItemQuantity(
+                          item._id,
+                          Math.max(1, Number(e.target.value)),
+                          !!isSignedIn
+                        )
+                      }
+                      className="w-12 text-center border rounded"
+                    />
+
+                    <button
+                      onClick={() =>
+                        updateCartItemQuantity(
+                          item._id,
+                          item.quantityInCart + 1,
+                          !!isSignedIn
+                        )
+                      }
+                      className="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded"
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -54,7 +105,7 @@ export default function CartPage() {
 
             <div className="flex justify-end gap-4 mt-4">
               <button
-                onClick={clearCart}
+                onClick={() => clearCart(!!isSignedIn)}
                 className="bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300 text-sm"
               >
                 Clear Cart

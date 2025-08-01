@@ -7,6 +7,7 @@ import {
 } from "@clerk/nextjs";
 import "./globals.css";
 import { ClientLayoutWrapper } from "./components/client-layout-wrapper";
+import { Toaster } from 'sonner'
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,6 +37,7 @@ export default function RootLayout({
         >
           <Nav />
           <ClientLayoutWrapper>{children}</ClientLayoutWrapper>
+          <Toaster richColors position="top-right" />
         </body>
       </html>
     </ClerkProvider>
