@@ -1,4 +1,6 @@
 import { useCartStore } from '@/lib/store';
+import { useUser } from '@clerk/nextjs';  // <-- import useUser hook
+
 type ProductProps = {
   name: string;
   price: number;
@@ -7,8 +9,29 @@ type ProductProps = {
   _id: string;
 };
 
-export default function ProductCard({ name, price, image, description, ...rest }: ProductProps) {
+type CartProduct = ProductProps & {
+  quantityInCart: number;
+  quantity: number;
+};
+
+export default function ProductCard({ name, price, image, description, _id }: ProductProps) {
   const addToCart = useCartStore((state) => state.addToCart);
+  const { isSignedIn = false } = useUser();  // <-- get sign-in status
+
+  const handleAddToCart = () => {
+    const product: CartProduct = {
+      _id,
+      name,
+      price,
+      image,
+      description,
+      quantityInCart: 1,
+      quantity: 1, // Default to 1 when adding to cart
+    };
+
+    // Pass isSignedIn boolean to the store function!
+    addToCart(product, isSignedIn);
+  };
 
   return (
     <div className="border rounded-xl p-4 shadow hover:shadow-md transition">
@@ -17,11 +40,8 @@ export default function ProductCard({ name, price, image, description, ...rest }
       <p className="text-gray-500 text-sm">{description}</p>
       <div className="mt-2 font-bold text-green-600">{price}৳</div>
       <button
-        onClick={() => {
-          addToCart({ name, price, image, _id: rest._id, quantity: 1 })
-          console.log(`Added ${name} to cart`);
-        }}
-        className="mt-3 bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700 text-sm"
+        onClick={handleAddToCart}
+        className="mt-3 bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700 text-sm cursor-pointer"
       >
         Add to Cart
       </button>

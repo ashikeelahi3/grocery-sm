@@ -2,9 +2,10 @@
 
 import { useCartStore } from '@/lib/store';
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useAuth } from '@clerk/nextjs';
 
 export default function CheckoutPage() {
+  const { isSignedIn } = useAuth()
   const { items, clearCart } = useCartStore();
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -33,7 +34,7 @@ export default function CheckoutPage() {
       total,
     });
 
-    clearCart();
+    clearCart(!!isSignedIn)
     setSuccess(true);
   };
 
