@@ -1,7 +1,12 @@
+
 import { MongoClient } from "mongodb";
+import "dotenv/config";
 
 async function seed() {
-  const uri = "mongodb+srv://ashikeelahi330:7DBgg2uvIAcOrhmN@cluster0.2s4zkrj.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+  const uri = process.env.MONGODB_URI;
+  if (!uri) {
+    throw new Error("MONGODB_URI not set in environment variables");
+  }
   const client = new MongoClient(uri);
 
   try {
