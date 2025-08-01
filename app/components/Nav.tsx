@@ -7,6 +7,7 @@ export default function Nav() {
       <div className="flex gap-6">
         <Link href="/" className="hover:text-blue-600 font-semibold transition">Home</Link>
         <Link href="/cart" className="hover:text-blue-600 font-semibold transition">Cart</Link>
+        <Link href="/orders" className="hover:text-blue-600 font-semibold transition">Order History</Link>
         <Link href="/admin" className="hover:text-blue-600 font-semibold transition">Admin</Link>
       </div>
       <div>

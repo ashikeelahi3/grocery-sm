@@ -5,38 +5,79 @@ import { useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
 
 export default function CheckoutPage() {
-  const { isSignedIn } = useAuth()
+  const { isSignedIn } = useAuth();
   const { items, clearCart } = useCartStore();
+
+  // Form fields
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
+
+  // UI states
   const [success, setSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const total = items.reduce(
     (sum, item) => sum + item.price * item.quantityInCart,
     0
   );
 
-  const handleSubmit = (e: React.FormEvent) => {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    setError(null); // Reset error on new submit
 
     if (!name || !phone || !address) {
       alert('Please fill all fields');
       return;
     }
 
-    // 🔐 Later: Send order to backend here
-    console.log({
-      name,
-      phone,
-      address,
-      items,
-      total,
-    });
+    if (items.length === 0) {
+      alert('Your cart is empty');
+      return;
+    }
 
-    clearCart(!!isSignedIn)
-    setSuccess(true);
-  };
+    if (!isSignedIn) {
+      alert('You must be signed in to place an order');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // Send order data to API
+      const res = await fetch('/api/order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          phone,
+          address,
+          items,
+          total,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to place order');
+      }
+
+      // On success
+      setSuccess(true);
+      clearCart(!!isSignedIn);
+
+      // Optional: reset form fields
+      setName('');
+      setPhone('');
+      setAddress('');
+    } catch (err: any) {
+      setError(err.message || 'An unexpected error occurred');
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <div className="p-6 max-w-xl mx-auto">
@@ -51,33 +92,36 @@ export default function CheckoutPage() {
           <div>
             <label className="block text-sm font-medium">Full Name</label>
             <input
-              aria-label='Full Name'
+              aria-label="Full Name"
               className="w-full border p-2 rounded"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
+              disabled={loading}
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium">Phone</label>
             <input
-              aria-label='Phone Number'
+              aria-label="Phone Number"
               className="w-full border p-2 rounded"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               required
+              disabled={loading}
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium">Address</label>
             <textarea
-              aria-label='Shipping Address'
+              aria-label="Shipping Address"
               className="w-full border p-2 rounded"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
               required
+              disabled={loading}
             />
           </div>
 
@@ -95,16 +139,21 @@ export default function CheckoutPage() {
                 ))}
               </ul>
             )}
-            <div className="font-bold text-right mt-2">
-              Total: {total}৳
-            </div>
+            <div className="font-bold text-right mt-2">Total: {total}৳</div>
           </div>
+
+          {error && (
+            <div className="text-red-600 font-semibold">{error}</div>
+          )}
 
           <button
             type="submit"
-            className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
+            className={`bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 ${
+              loading ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+            disabled={loading}
           >
-            Confirm Order
+            {loading ? 'Placing Order...' : 'Confirm Order'}
           </button>
         </form>
       )}
