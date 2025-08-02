@@ -1,27 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAuth } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import clientPromise from "@/lib/mongo";
 
-export async function GET(req: Request) {
-  const nextReq = new NextRequest(req.url, {
-    headers: req.headers,
-  });
-
-  const { sessionClaims } = getAuth(nextReq);
+export async function GET(_req: NextRequest) {
+  const { sessionClaims } = await auth();
   const role = sessionClaims?.metadata?.role;
 
-  if (role !== "admin") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (role !== "admin") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  try {
+    const client = await clientPromise;
+    const orders = await client.db("grocery-mvp").collection("orders").find({}).sort({ createdAt: -1 }).toArray();
+    return NextResponse.json({ orders });
+  } catch {
+    return NextResponse.json({ error: "Fetch error" }, { status: 500 });
   }
-
-  const client = await clientPromise;
-  const db = client.db("grocery-mvp");
-
-  const orders = await db
-    .collection("orders")
-    .find({})
-    .sort({ createdAt: -1 })
-    .toArray();
-
-  return NextResponse.json({ orders });
 }
